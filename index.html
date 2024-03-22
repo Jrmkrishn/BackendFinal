@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Facial Emotion Recognition</title>
+  </head>
+  <body>
+    <h1>Facial Emotion Recognition</h1>
+    <div id="video-container">
+      <video id="video" autoplay></video>
+    </div>
+    <div id="emotion-result"></div>
+    <button id="open-button">Open</button>
+    <button id="close-button" disabled>Close</button>
+
+    <script>
+      const video = document.getElementById("video");
+      const emotionResult = document.getElementById("emotion-result");
+      const openButton = document.getElementById("open-button");
+      const closeButton = document.getElementById("close-button");
+      let ws;
+
+      openButton.addEventListener("click", () => {
+        ws = new WebSocket("ws://localhost:8000/video");
+
+        ws.onopen = () => {
+          console.log("WebSocket connected");
+          openButton.disabled = true;
+          closeButton.disabled = false;
+        };
+
+        ws.onmessage = (event) => {
+          const emotion = event.data;
+          emotionResult.textContent = `Predicted Emotion: ${emotion}`;
+        };
+
+        navigator.mediaDevices
+          .getUserMedia({ video: true })
+          .then((stream) => {
+            video.srcObject = stream;
+          })
+          .catch((error) => {
+            console.error("Error accessing webcam:", error);
+          });
+      });
+
+      closeButton.addEventListener("click", () => {
+        console.log("close");
+        if (ws) {
+          ws.close();
+          openButton.disabled = false;
+          closeButton.disabled = true;
+          emotionResult.textContent = "";
+        }
+      });
+    </script>
+  </body>
+</html>
